@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, json
 import urllib.request
+import os
 
 app = Flask(__name__)
 
@@ -57,18 +58,21 @@ def save_top20_podcasts():
 @app.route('/api/v1/save_top20_from_bottom_podcasts/', methods=['POST'])
 def save_top20_from_bottom_podcasts():
     try:
-        data_podcasts = get_podcasts_info()
-        iterator = 0
-        reverse_data_podcasts = data_podcasts[::-1]
-        podcasts_list = []
-        for podcast in reverse_data_podcasts:
-            podcasts_list.append(podcast)
-            iterator += 1
-            if iterator == 20:
-                break
-        with open('json/top_20_podcasts.json', 'w') as json_file:
-            json.dump(podcasts_list, json_file)
-        return jsonify(podcasts_list)
+        if os.path.isfile('json/top_20_podcasts.json'):
+            data_podcasts = get_podcasts_info()
+            iterator = 0
+            reverse_data_podcasts = data_podcasts[::-1]
+            podcasts_list = []
+            for podcast in reverse_data_podcasts:
+                podcasts_list.append(podcast)
+                iterator += 1
+                if iterator == 20:
+                    break
+            with open('json/top_20_podcasts.json', 'w') as json_file:
+                json.dump(podcasts_list, json_file)
+            return jsonify(podcasts_list)
+        else:
+            return jsonify({'404': "File top_20_podcasts.json not found."})
     except:
         return jsonify({'500': "Internal error"})
 
@@ -76,14 +80,17 @@ def save_top20_from_bottom_podcasts():
 @app.route('/api/v1/remove_podcast/<int:position>', methods=['POST'])
 def remove_podcast(position):
     try:
-        position_remove = position - 1
-        if position_remove < 0:
-            return jsonify({'500': "ERROR: Can't remove zero position"})
-        with open('json/top_20_podcasts.json', 'r') as podcasts_file:
-            podcasts = json.load(podcasts_file)
-            podcasts.pop(position_remove)
-        with open('json/top_20_podcasts.json', 'w') as podcasts_file:
-            json.dump(podcasts, podcasts_file)
-        return jsonify(podcasts)
+        if os.path.isfile('json/top_20_podcasts.json'):
+            position_remove = position - 1
+            if position_remove < 0:
+                return jsonify({'500': "ERROR: Can't remove zero position"})
+            with open('json/top_20_podcasts.json', 'r') as podcasts_file:
+                podcasts = json.load(podcasts_file)
+                podcasts.pop(position_remove)
+            with open('json/top_20_podcasts.json', 'w') as podcasts_file:
+                json.dump(podcasts, podcasts_file)
+            return jsonify(podcasts)
+        else:
+            return jsonify({'404': "File top_20_podcasts.json not found."})
     except:
         return jsonify({'500': "Internal error"})
